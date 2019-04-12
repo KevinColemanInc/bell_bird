@@ -1,25 +1,35 @@
-# SQLite version 3.x
-#   gem install sqlite3
-#
-#   Ensure the SQLite 3 gem is defined in your Gemfile
-#   gem 'sqlite3'
-#
+<%
+if ENV['DB_POOL']
+  web_pool_size = ENV['DB_POOL'].to_i
+elsif ENV['MAX_THREADS']
+  web_pool_size = ENV['MAX_THREADS'].to_i # + 1 if buffer needed
+else
+  web_pool_size = 5
+end
+%>
 default: &default
-  adapter: sqlite3
+  adapter: postgresql
+  encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  timeout: 5000
+  reaping_frequency: <%= ENV['DB_REAP_FREQ'] || 10 %>
+  connect_timeout:  # DELIBERATELY LEFT BLANK FOR QUOTAGUARD STATIC (PRODUCTION)
+  checkout_timeout: #DELIBERATELY LEFT BLANK FOR QUOTAGUARD STATIC (PRODUCTION)
 
 development:
   <<: *default
-  database: db/development.sqlite3
+  database: bell_bird_dev
 
-# Warning: The database defined as "test" will be erased and
-# re-generated from your development database when you run "rake".
-# Do not set this db to the same as development or production.
 test:
   <<: *default
-  database: db/test.sqlite3
+  database: bell_bird
 
 production:
   <<: *default
-  database: db/production.sqlite3
+  url:  <%= ENV['DATABASE_URL'] %>
+  pool: <%= web_pool_size %>
+
+production_sidekiq:
+  <<: *default
+  url:  <%= ENV['DATABASE_URL'] %>
+  pool: <%= (ENV['SIDEKIQ_CONCURRENCY'] || 25).to_i + 2 %>
+  # Intentionally don't set timeout on sidekiq

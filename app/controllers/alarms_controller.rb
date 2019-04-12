@@ -5,6 +5,8 @@ class AlarmsController < ApplicationController
   # GET /alarms.json
   def index
     @alarms = Alarm.ordered
+
+    @alarms = @alarms.sort { |x,y| y.score <=> x.score }
   end
 
   # GET /alarms/1
