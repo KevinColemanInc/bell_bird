@@ -1,6 +1,6 @@
 class AlarmsController < ApplicationController
   before_action :set_alarm, only: [:show, :edit, :update, :destroy]
-
+  skip_before_action :verify_authenticity_token
   # GET /alarms
   # GET /alarms.json
   def index
